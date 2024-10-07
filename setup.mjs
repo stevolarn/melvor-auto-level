@@ -22,6 +22,14 @@ export function setup(ctx) {
       hint: 'Automatically fish the highest level fish you can',
       default: true
     });
+    
+    ctx.settings.section('General').add({
+      type: 'switch',
+      name: 'mining-auto-level',
+      label: 'Auto Level mining',
+      hint: 'Automatically mine the highest level rock you can',
+      default: true
+    });
   
   
     ctx.patch(Astrology, 'postAction').after(function() {
@@ -100,6 +108,35 @@ export function setup(ctx) {
               console.log('Change Active Fish: ','action.level', action.level, 'game.fishing._level', game.fishing._level, 'action', action)          
               game.fishing.onAreaFishSelection(action.area, action)
               game.fishing.onAreaStartButtonClick(action.area)
+              //break out of loop
+              break
+            }
+          }
+        }
+      }
+
+    })
+
+    ctx.patch(Mining, 'postAction').after(function() {
+
+      if(!ctx.settings.section('General').get('mining-auto-level')) {
+        return
+      }
+
+      //sort the action with the highest baseExperience
+      let actions = game.mining.actions.allObjects
+      actions.sort((a, b) => b.baseExperience - a.baseExperience)
+
+      //loop through actions
+      for (let action of actions) {
+        //if game.mining._level >= action.level
+        if (game.mining._level >= action.level) {
+          if (game.mining.canMineOre(action) && !action.isRespwaning && action.currentHP > 0) {
+            if (game.mining.selectedRock === action) {
+              break
+            } else {
+              console.log('Change Active Rock: ','action.level', action.level, 'game.mining._level', game.mining._level, 'action', action)
+              game.mining.onRockClick(action)
               //break out of loop
               break
             }
