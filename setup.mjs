@@ -1,5 +1,5 @@
 export function setup(ctx) {
-    ctx.settings.section('General').add({
+    ctx.settings.section('Astrology').add({
       type: 'switch',
       name: 'astrology-auto-level',
       label: 'Auto level Astrology',
@@ -7,7 +7,17 @@ export function setup(ctx) {
       default: true
     });
 
-    ctx.settings.section('General').add({
+    ctx.settings.section('Astrology').add({
+      type: 'number',
+      min: 1,
+      max: 100,
+      name: 'astrology-auto-level-max-mastery',
+      label: 'Astrology Max Mastery Level',
+      hint: 'Maximum mastery level to study up to before going to the previous constellation (set to 100 for unlimited)',
+      default: 100
+    });
+
+    ctx.settings.section('Woodcutting').add({
       type: 'switch',
       name: 'woodcutting-auto-level',
       label: 'Auto Level Woodcutting',
@@ -15,26 +25,56 @@ export function setup(ctx) {
       default: true
     });
 
-    ctx.settings.section('General').add({
+    ctx.settings.section('Woodcutting').add({
+      type: 'number',
+      min: 1,
+      max: 100,
+      name: 'woodcutting-auto-level-max-mastery',
+      label: 'Woodcutting Max Mastery Level',
+      hint: 'Maximum mastery level to cut up to before going to the previous tree (set to 100 for unlimited)',
+      default: 100
+    });
+
+    ctx.settings.section('Fishing').add({
       type: 'switch',
       name: 'fishing-auto-level',
       label: 'Auto Level Fishing',
       hint: 'Automatically fish the highest level fish you can',
       default: true
     });
+
+    ctx.settings.section('Fishing').add({
+      type: 'number',
+      min: 1,
+      max: 100,
+      name: 'fishing-auto-level-max-mastery',
+      label: 'Fishing Max Mastery Level',
+      hint: 'Maximum mastery level to fish up to before going to the previous fish (set to 100 for unlimited)',
+      default: 100
+    });
     
-    ctx.settings.section('General').add({
+    ctx.settings.section('Mining').add({
       type: 'switch',
       name: 'mining-auto-level',
       label: 'Auto Level mining',
       hint: 'Automatically mine the highest level rock you can',
       default: true
     });
+
+    ctx.settings.section('Mining').add({
+      type: 'number',
+      min: 1,
+      max: 100,
+      name: 'mining-auto-level-max-mastery',
+      label: 'Mining Max Mastery Level',
+      hint: 'Maximum mastery level to mine up to before going to the previous rock (set to 100 for unlimited)',
+      default: 100
+    });
   
   
     ctx.patch(Astrology, 'postAction').after(function() {
 
-      if(!ctx.settings.section('General').get('astrology-auto-level')) {
+      if(!ctx.settings.section('Astrology').get('astrology-auto-level')) {
         return
       }
 
@@ -42,10 +82,11 @@ export function setup(ctx) {
       let actions = game.astrology.actions.allObjects
       actions.sort((a, b) => b.baseExperience - a.baseExperience)
 
+      
       //loop through actions
       for (let action of actions) {
         //if game.astrology._level >= action.level
-        if (game.astrology._level >= action.level) {
+        if (game.astrology._level >= action.level && game.astrology.getMasteryLevel(action) < ctx.settings.section('Astrology').get('astrology-auto-level-max-mastery')) {
           if (game.astrology.activeConstellation === action) {
             break
           } else {
@@ -61,7 +102,7 @@ export function setup(ctx) {
 
     ctx.patch(Woodcutting, 'postAction').after(function() {
 
-      if(!ctx.settings.section('General').get('woodcutting-auto-level')) {
+      if(!ctx.settings.section('Woodcutting').get('woodcutting-auto-level')) {
         return
       }
       
@@ -71,7 +112,7 @@ export function setup(ctx) {
 
       //loop through actions
       for (let action of actions) {
-        if (game.woodcutting.isTreeUnlocked(action)) {
+        if (game.woodcutting.isTreeUnlocked(action) && game.woodcutting.getMasteryLevel(action) < ctx.settings.section('Woodcutting').get('woodcutting-auto-level-max-mastery')) {
           // if active tree set has action in it
           if (game.woodcutting.activeTrees.has(action)){
             break
@@ -89,7 +130,7 @@ export function setup(ctx) {
 
     ctx.patch(Fishing, 'postAction').after(function() {
 
-      if(!ctx.settings.section('General').get('fishing-auto-level')) {
+      if(!ctx.settings.section('Fishing').get('fishing-auto-level')) {
         return
       }
       
@@ -99,7 +140,7 @@ export function setup(ctx) {
 
       //loop through actions
       for (let action of actions) {
-        if (game.fishing._level >= action.level) {
+        if (game.fishing._level >= action.level && game.fishing.getMasteryLevel(action) < ctx.settings.section('Fishing').get('fishing-auto-level-max-mastery')) {
           // if active tree set has action in it
           if (game.fishing.activeFish === action){
             break
@@ -119,7 +160,7 @@ export function setup(ctx) {
 
     ctx.patch(Mining, 'postAction').after(function() {
 
-      if(!ctx.settings.section('General').get('mining-auto-level')) {
+      if(!ctx.settings.section('Mining').get('mining-auto-level')) {
         return
       }
 
@@ -130,7 +171,7 @@ export function setup(ctx) {
       //loop through actions
       for (let action of actions) {
         //if game.mining._level >= action.level
-        if (game.mining._level >= action.level) {
+        if (game.mining._level >= action.level && game.mining.getMasteryLevel(action) < ctx.settings.section('Mining').get('mining-auto-level-max-mastery')) {
           if (game.mining.canMineOre(action) && !action.isRespwaning && action.currentHP > 0) {
             if (game.mining.selectedRock === action) {
               break

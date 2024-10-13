@@ -8,5 +8,5 @@
 - Firemaking
 - Runecrafting
 - Smithing
-- max mastery setting
+- max mastery setting ✅
 - realm checking 
