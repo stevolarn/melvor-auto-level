@@ -13,7 +13,7 @@ export function setup(ctx) {
       max: 100,
       name: 'astrology-auto-level-max-mastery',
       label: 'Astrology Max Mastery Level',
-      hint: 'Maximum mastery level to study up to before going to the previous constellation (set to 100 for unlimited)',
+      hint: 'Maximum mastery level to study up to before going to the previous constellation (set to 100 for unlimited studying of the higest level constellation)',
       default: 100
     });
 
@@ -31,7 +31,7 @@ export function setup(ctx) {
       max: 100,
       name: 'woodcutting-auto-level-max-mastery',
       label: 'Woodcutting Max Mastery Level',
-      hint: 'Maximum mastery level to cut up to before going to the previous tree (set to 100 for unlimited)',
+      hint: 'Maximum mastery level to cut up to before going to the previous tree (set to 100 for unlimited cutting of the higest level tree)',
       default: 100
     });
 
@@ -49,7 +49,7 @@ export function setup(ctx) {
       max: 100,
       name: 'fishing-auto-level-max-mastery',
       label: 'Fishing Max Mastery Level',
-      hint: 'Maximum mastery level to fish up to before going to the previous fish (set to 100 for unlimited)',
+      hint: 'Maximum mastery level to fish up to before going to the previous fish (set to 100 for unlimited fishing of the higest level fish)',
       default: 100
     });
     
@@ -67,7 +67,7 @@ export function setup(ctx) {
       max: 100,
       name: 'mining-auto-level-max-mastery',
       label: 'Mining Max Mastery Level',
-      hint: 'Maximum mastery level to mine up to before going to the previous rock (set to 100 for unlimited)',
+      hint: 'Maximum mastery level to mine up to before going to the previous rock (set to 100 for unlimited mining of the higest level rock)',
       default: 100
     });
   
@@ -80,23 +80,41 @@ export function setup(ctx) {
 
       //sort the action with the highest baseExperience
       let actions = game.astrology.actions.allObjects
-      actions.sort((a, b) => b.baseExperience - a.baseExperience)
+      let accessFilter = actions.filter(action => game.astrology._level >= action.level)
+      let masterFilter = accessFilter.filter(action => game.astrology.getMasteryLevel(action) < ctx.settings.section('Astrology').get('astrology-auto-level-max-mastery'))
+
+      let final = null
+
+      if (masterFilter.length === 0) {
+        final = accessFilter
+      } else {
+        final = masterFilter
+      }
+
+      final.sort((a, b) => b.baseExperience - a.baseExperience)
+
+      if (game.astrology.activeConstellation !== final[0]) {
+        console.log('Change Active Constellation: ','action.level', final[0].level, 'game.astrology._level', game.astrology._level, 'action', final[0])
+        game.astrology.studyConstellationOnClick(final[0])
+      }
+
+      // actions.sort((a, b) => b.baseExperience - a.baseExperience)
 
       
-      //loop through actions
-      for (let action of actions) {
-        //if game.astrology._level >= action.level
-        if (game.astrology._level >= action.level && game.astrology.getMasteryLevel(action) < ctx.settings.section('Astrology').get('astrology-auto-level-max-mastery')) {
-          if (game.astrology.activeConstellation === action) {
-            break
-          } else {
-            console.log('Change Active Constellation: ','action.level', action.level, 'game.astrology._level', game.astrology._level, 'action', action)
-            game.astrology.studyConstellationOnClick(action)
-            //break out of loop
-            break         
-          }
-        }
-      }
+      // //loop through actions
+      // for (let action of actions) {
+      //   //if game.astrology._level >= action.level
+      //   if (game.astrology._level >= action.level && game.astrology.getMasteryLevel(action) < ctx.settings.section('Astrology').get('astrology-auto-level-max-mastery')) {
+      //     if (game.astrology.activeConstellation === action) {
+      //       break
+      //     } else {
+      //       console.log('Change Active Constellation: ','action.level', action.level, 'game.astrology._level', game.astrology._level, 'action', action)
+      //       game.astrology.studyConstellationOnClick(action)
+      //       //break out of loop
+      //       break         
+      //     }
+      //   }
+      // }
 
     })
 
@@ -108,23 +126,44 @@ export function setup(ctx) {
       
       //sort the action with the highest baseExperience
       let actions = game.woodcutting.actions.allObjects
-      actions.sort((a, b) => b.baseExperience - a.baseExperience)
+      let accessFilter = actions.filter(action => game.woodcutting.isTreeUnlocked(action) )
+      let masterFilter = accessFilter.filter(action => game.woodcutting.getMasteryLevel(action) < ctx.settings.section('Woodcutting').get('woodcutting-auto-level-max-mastery'))
 
-      //loop through actions
-      for (let action of actions) {
-        if (game.woodcutting.isTreeUnlocked(action) && game.woodcutting.getMasteryLevel(action) < ctx.settings.section('Woodcutting').get('woodcutting-auto-level-max-mastery')) {
-          // if active tree set has action in it
-          if (game.woodcutting.activeTrees.has(action)){
-            break
-          } else {
-            console.log('Change Active Tree: ','action.level', action.level, 'game.woodcutting._level', game.woodcutting._level, 'action', action)
-            game.woodcutting.activeTrees.clear()
-            game.woodcutting.selectTree(action)
-            //break out of loop
-            break
-          }
+      let final = null
+
+      if (masterFilter.length === 0) {
+        final = accessFilter
+      } else {
+        final = masterFilter
+      }
+
+      final.sort((a, b) => b.baseExperience - a.baseExperience)
+
+      if (!game.woodcutting.activeTrees.has(final[0])) {
+        console.log('Change Active Tree: ','action.level', final[0].level, 'game.woodcutting._level', game.woodcutting._level, 'action', final[0])
+        game.woodcutting.activeTrees.clear()
+        game.woodcutting.selectTree(final[0])
+        if (final.length > 1) {
+          game.woodcutting.selectTree(final[1])
         }
       }
+
+
+      // //loop through actions
+      // for (let action of actions) {
+      //   if (game.woodcutting.isTreeUnlocked(action) && game.woodcutting.getMasteryLevel(action) < ctx.settings.section('Woodcutting').get('woodcutting-auto-level-max-mastery')) {
+      //     // if active tree set has action in it
+      //     if (game.woodcutting.activeTrees.has(action)){
+      //       break
+      //     } else {
+      //       console.log('Change Active Tree: ','action.level', action.level, 'game.woodcutting._level', game.woodcutting._level, 'action', action)
+      //       game.woodcutting.activeTrees.clear()
+      //       game.woodcutting.selectTree(action)
+      //       //break out of loop
+      //       break
+      //     }
+      //   }
+      // }
 
     })
 
@@ -136,25 +175,44 @@ export function setup(ctx) {
       
       //sort the action with the highest baseExperience
       let actions = game.fishing.actions.allObjects
-      actions.sort((a, b) => b.baseExperience - a.baseExperience)
+      let accessFilter = actions.filter(action => (!action.area.isSecret || (action.area.isSecret && game.fishing.secretAreaUnlocked === true)) 
+        && (action.area.poiRequirement === undefined || action.area.poiRequirement.pois[0].isDiscovered === true) 
+        && (game.fishing._level >= action.level))
+      let masterFilter = accessFilter.filter(action => game.fishing.getMasteryLevel(action) < ctx.settings.section('Fishing').get('fishing-auto-level-max-mastery'))
 
-      //loop through actions
-      for (let action of actions) {
-        if (game.fishing._level >= action.level && game.fishing.getMasteryLevel(action) < ctx.settings.section('Fishing').get('fishing-auto-level-max-mastery')) {
-          // if active tree set has action in it
-          if (game.fishing.activeFish === action){
-            break
-          } else if ((!action.area.isSecret || (action.area.isSecret && game.fishing.secretAreaUnlocked === true))){
-            if(action.area.poiRequirement === undefined || action.area.poiRequirement.pois[0].isDiscovered === true){
-              console.log('Change Active Fish: ','action.level', action.level, 'game.fishing._level', game.fishing._level, 'action', action)          
-              game.fishing.onAreaFishSelection(action.area, action)
-              game.fishing.onAreaStartButtonClick(action.area)
-              //break out of loop
-              break
-            }
-          }
-        }
+      let final = null
+
+      if (masterFilter.length === 0) {
+        final = accessFilter
+      } else {
+        final = masterFilter
       }
+
+      final.sort((a, b) => b.baseExperience - a.baseExperience)
+
+      if (game.fishing.activeFish !== final[0]) {
+        console.log('Change Active Fish: ','action.level', final[0].level, 'game.fishing._level', game.fishing._level, 'action', final[0])          
+        game.fishing.onAreaFishSelection(final[0].area, final[0])
+        game.fishing.onAreaStartButtonClick(final[0].area)
+      }
+
+      // //loop through actions
+      // for (let action of actions) {
+      //   if (game.fishing._level >= action.level && game.fishing.getMasteryLevel(action) < ctx.settings.section('Fishing').get('fishing-auto-level-max-mastery')) {
+      //     // if active tree set has action in it
+      //     if (game.fishing.activeFish === action){
+      //       break
+      //     } else if ((!action.area.isSecret || (action.area.isSecret && game.fishing.secretAreaUnlocked === true))){
+      //       if(action.area.poiRequirement === undefined || action.area.poiRequirement.pois[0].isDiscovered === true){
+      //         console.log('Change Active Fish: ','action.level', action.level, 'game.fishing._level', game.fishing._level, 'action', action)          
+      //         game.fishing.onAreaFishSelection(action.area, action)
+      //         game.fishing.onAreaStartButtonClick(action.area)
+      //         //break out of loop
+      //         break
+      //       }
+      //     }
+      //   }
+      // }
 
     })
 
@@ -166,24 +224,44 @@ export function setup(ctx) {
 
       //sort the action with the highest baseExperience
       let actions = game.mining.actions.allObjects
-      actions.sort((a, b) => b.baseExperience - a.baseExperience)
+      let accessFilter = actions.filter(action => game.mining._level >= action.level 
+        && game.mining.canMineOre(action) && !action.isRespwaning && action.currentHP > 0
+      )
+      let masterFilter = accessFilter.filter(action => game.mining.getMasteryLevel(action) < ctx.settings.section('Mining').get('mining-auto-level-max-mastery'))
 
-      //loop through actions
-      for (let action of actions) {
-        //if game.mining._level >= action.level
-        if (game.mining._level >= action.level && game.mining.getMasteryLevel(action) < ctx.settings.section('Mining').get('mining-auto-level-max-mastery')) {
-          if (game.mining.canMineOre(action) && !action.isRespwaning && action.currentHP > 0) {
-            if (game.mining.selectedRock === action) {
-              break
-            } else {
-              console.log('Change Active Rock: ','action.level', action.level, 'game.mining._level', game.mining._level, 'action', action)
-              game.mining.onRockClick(action)
-              //break out of loop
-              break
-            }
-          }
-        }
+      let final = null
+
+      if (masterFilter.length === 0) {
+        final = accessFilter
+      } else {
+        final = masterFilter
       }
+
+      final.sort((a, b) => b.baseExperience - a.baseExperience)
+
+      if (game.mining.selectedRock !== final[0]) {
+        console.log('Change Active Rock: ','action.level', final[0].level, 'game.mining._level', game.mining._level, 'action', final[0])
+        game.mining.onRockClick(final[0])
+      }
+
+      // actions.sort((a, b) => b.baseExperience - a.baseExperience)
+
+      // //loop through actions
+      // for (let action of actions) {
+      //   //if game.mining._level >= action.level
+      //   if (game.mining._level >= action.level && game.mining.getMasteryLevel(action) < ctx.settings.section('Mining').get('mining-auto-level-max-mastery')) {
+      //     if (game.mining.canMineOre(action) && !action.isRespwaning && action.currentHP > 0) {
+      //       if (game.mining.selectedRock === action) {
+      //         break
+      //       } else {
+      //         console.log('Change Active Rock: ','action.level', action.level, 'game.mining._level', game.mining._level, 'action', action)
+      //         game.mining.onRockClick(action)
+      //         //break out of loop
+      //         break
+      //       }
+      //     }
+      //   }
+      // }
 
     })
 
