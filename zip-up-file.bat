@@ -7,6 +7,8 @@ set FILES=manifest.json,setup.mjs
 REM Define the output zip file
 set ZIPFILE=melvor-auto-level.zip
 
+del %ZIPFILE% 2> nul
+
 REM Create the zip file
 powershell Compress-Archive -Path %FILES% -DestinationPath %ZIPFILE% -Force
 
