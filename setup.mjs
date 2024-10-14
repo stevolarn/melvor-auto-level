@@ -177,7 +177,9 @@ export function setup(ctx) {
       let actions = game.fishing.actions.allObjects
       let accessFilter = actions.filter(action => (!action.area.isSecret || (action.area.isSecret && game.fishing.secretAreaUnlocked === true)) 
         && (action.area.poiRequirement === undefined || action.area.poiRequirement.pois[0].isDiscovered === true) 
-        && (game.fishing._level >= action.level))
+        && (game.fishing._level >= action.level)
+        && (!game.fishing.activeFish.area.requiredItem || game.fishing.activeFish.area.requiredItem.occupiesSlots.length > 0)
+      )
       let masterFilter = accessFilter.filter(action => game.fishing.getMasteryLevel(action) < ctx.settings.section('Fishing').get('fishing-auto-level-max-mastery'))
 
       let final = null
